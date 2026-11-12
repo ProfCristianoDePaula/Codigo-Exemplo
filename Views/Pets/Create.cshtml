@@ -1,0 +1,2 @@
+@model ClinicaVet.Models.Pet
+@{ViewData["Title"]="Novo pet";}<h1>Novo pet</h1>@if(ViewData["TutorId"] is IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> xs && !xs.Any()){<div class="alert alert-info">Cadastre um tutor antes de cadastrar pets.</div>}<form asp-action="Create"><partial name="_Form" model="Model"/><button class="btn btn-primary">Salvar</button> <a asp-action="Index">Voltar</a></form>

@@ -1,0 +1,2 @@
+@model ClinicaVet.Models.Pet
+@{ViewData["Title"]="Excluir pet";}<h1>Excluir pet</h1><p>Confirma excluir <strong>@Model.Nome</strong>?</p><form asp-action="Delete"><input type="hidden" name="id" value="@Model.Id"/><button class="btn btn-danger">Excluir</button> <a asp-action="Index">Cancelar</a></form>

@@ -1,0 +1,2 @@
+@model ClinicaVet.Models.Agendamento
+@{ViewData["Title"]="Excluir agendamento";}<h1>Excluir agendamento</h1><p>Confirma excluir o agendamento de <strong>@Model.Pet?.Nome</strong> em @Model.DataHora.ToString("dd/MM/yyyy HH:mm")?</p><form asp-action="Delete"><input type="hidden" name="id" value="@Model.Id"/><button class="btn btn-danger">Excluir</button> <a asp-action="Index">Cancelar</a></form>
