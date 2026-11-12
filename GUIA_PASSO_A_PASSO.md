@@ -12,6 +12,7 @@ Este guia ensina como clonar o código, restaurar dependências, compilar, execu
 4. [Alternativa — usar SQL Server](#4-alternativa--usar-sql-server)
 5. [Solução de problemas](#5-solução-de-problemas)
 6. [Recursos implementados](#6-recursos-implementados)
+7. [Abrir o SQLite no VS Code e gerar o diagrama](#7-abrir-o-sqlite-no-vs-code-e-gerar-o-diagrama)
 
 ---
 
@@ -356,3 +357,107 @@ O código chama `EnsureCreated`: ele cria o schema em banco novo, mas não atual
 - API autenticada `GET /api/tutores` e `GET /api/tutores/{id}`, sem CPF na resposta.
 
 > **Nota para produção:** a demonstração permite cadastro público de contas e usa `EnsureCreated`. Antes de publicar para usuários reais, defina a política de cadastro, implemente migrations, configure HTTPS, proteja as chaves de Data Protection e faça backup do banco.
+
+
+---
+
+## 7. Abrir o SQLite no VS Code e gerar o diagrama
+
+Este roteiro usa a extensão **SQLite DB Explorer**, que abre arquivos `.db` no VS Code e oferece as abas **Data**, **SQL**, **Schema** e **ER Diagram**. O diagrama interativo mostra tabelas e relacionamentos declarados por chaves estrangeiras. Consulte a [página da extensão no Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=sqlite-db-explorer.sqlite-db-explorer).
+
+### 7.1. Criar ou localizar o arquivo do banco
+
+A aplicação não gera o arquivo SQLite até ser executada. Para criar um banco novo e usá-lo para o diagrama, abra um terminal PowerShell na raiz do projeto e rode:
+
+```powershell
+$env:Database__Provider = "Sqlite"
+$env:ConnectionStrings__ClinicaConnection = "Data Source=clinica-vet-diagrama.db"
+dotnet run --launch-profile http
+```
+
+Aguarde a mensagem indicando que o servidor iniciou. O arquivo `clinica-vet-diagrama.db` e o schema são criados na pasta de trabalho do projeto durante a inicialização. Não é necessário cadastrar dados para enxergar o diagrama: as tabelas e chaves estrangeiras já bastam.
+
+Quando o terminal mostrar que o app está ouvindo, pressione `Ctrl+C` para encerrar antes de abrir o arquivo. Isso fecha as conexões e evita tentar visualizar o banco enquanto a aplicação está gravando nele.
+
+Se já existe um arquivo `clinica-vet.db` que você quer inspecionar, use esse caminho na etapa 7.3. O banco versionado no repositório pode ter dados antigos. Para visualizar somente o schema com um banco limpo, prefira `clinica-vet-diagrama.db`.
+
+### 7.2. Instalar a extensão no VS Code
+
+1. Abra o Visual Studio Code.
+2. Abra a pasta do projeto por **File > Open Folder...** e selecione a pasta onde está `SAEP-PROVA.csproj`.
+3. Abra Extensões com `Ctrl+Shift+X` (Windows/Linux) ou `Cmd+Shift+X` (macOS).
+4. Pesquise por `SQLite DB Explorer`.
+5. Abra a extensão cujo identificador do Marketplace é `sqlite-db-explorer.sqlite-db-explorer` e clique **Install**.
+6. Aguarde a instalação terminar.
+
+Opcionalmente, com o comando `code` disponível no terminal, instale via:
+
+```powershell
+code --install-extension sqlite-db-explorer.sqlite-db-explorer
+```
+
+### 7.3. Abrir o arquivo `.db`
+
+No Explorer do VS Code, encontre `clinica-vet-diagrama.db` e clique duas vezes. Se aparecer uma caixa **Select Editor**, escolha o editor do SQLite DB Explorer. Outra opção é abrir a Paleta de Comandos (`Ctrl+Shift+P`) e executar:
+
+```text
+SQLite: Open Database
+```
+
+Selecione o arquivo `clinica-vet-diagrama.db` na pasta do projeto. Se a extensão perguntar como abrir o arquivo, escolha SQLite DB Explorer.
+
+O banco será aberto em uma aba própria. As opções oferecidas pela extensão incluem Data, SQL, Schema e ER Diagram.
+
+### 7.4. Exibir o diagrama ER
+
+1. Na aba do banco, clique em **ER Diagram**.
+2. Aguarde a extensão ler o schema e posicionar as tabelas.
+3. Use zoom, pan ou **fit to view** para centralizar o desenho.
+4. Arraste as caixas para organizá-las, se necessário.
+5. Verifique que as setas correspondem aos vínculos esperados:
+   - `Tutores` para `Pets` (um tutor pode ter vários pets);
+   - `Pets` para `Agendamentos` (um pet pode ter vários agendamentos);
+   - `Usuarios` não tem relação com as outras três tabelas.
+
+O desenho esperado, em forma simplificada, é:
+
+```mermaid
+erDiagram
+    TUTORES ||--o{ PETS : possui
+    PETS ||--o{ AGENDAMENTOS : recebe
+    USUARIOS
+```
+
+A extensão detecta relacionamentos gravados como foreign keys. Se as tabelas aparecerem, mas não houver setas, consulte as chaves estrangeiras no editor SQL:
+
+```sql
+PRAGMA foreign_key_list('Pets');
+PRAGMA foreign_key_list('Agendamentos');
+```
+
+Também é possível confirmar que o arquivo tem as quatro tabelas:
+
+```sql
+SELECT name
+FROM sqlite_master
+WHERE type = 'table'
+  AND name NOT LIKE 'sqlite_%'
+ORDER BY name;
+```
+
+### 7.5. Salvar uma imagem do diagrama
+
+A aba ER Diagram apresenta uma visualização interativa. A listagem da extensão documenta navegação e zoom, mas não promete exportação direta do diagrama como imagem. Para anexar uma imagem a uma atividade:
+
+1. Ajuste o zoom para que todas as tabelas e setas fiquem visíveis.
+2. Use a captura de tela do sistema operacional (`Win+Shift+S` no Windows).
+3. Salve a captura como `der.png` na pasta desejada.
+4. Confira que nomes das tabelas, PKs, FKs e relacionamentos estão legíveis.
+
+Se precisar exportar diretamente para SVG/PNG, uma alternativa é a extensão [ERD Renderer & Database Visualizer](https://marketplace.visualstudio.com/items?itemName=shubhamshakya.erd-renderer), que lista conexão a banco SQLite e exportação de imagem. Revise as permissões e o fluxo de conexão da extensão antes de usá-la.
+
+### 7.6. Cuidados com o arquivo
+
+SQLite DB Explorer também oferece recursos para editar dados e schema. Para este roteiro, use somente as abas **Schema** e **ER Diagram**. Não clique em editar, adicionar ou excluir linhas/tabelas. Se for explorar essas funções, faça uma cópia do `.db` primeiro.
+
+Arquivos `.db`, `.db-shm` e `.db-wal` são arquivos locais de dados; mantenha-os fora do GitHub com as regras do `.gitignore` da Etapa 3.2. Não suba dados de pessoas reais para o repositório.
