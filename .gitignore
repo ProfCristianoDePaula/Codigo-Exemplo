@@ -1,0 +1,35 @@
+# Diretórios de compilação e build
+bin/
+obj/
+
+# Arquivos de configuração do usuário
+*.csproj.user
+*.suo
+*.user
+.vs/
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Banco de dados local (SQLite)
+*.db
+*.db-shm
+*.db-wal
+
+# Dependências
+packages/
+.nuget/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*~
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
